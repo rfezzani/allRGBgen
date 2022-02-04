@@ -1,3 +1,4 @@
+import numpy as np
 from skimage import color
 
 
@@ -17,3 +18,9 @@ def sort_by_lum(rgb, lab=None):
     if lab is None:
         lab = color.rgb2lab(rgb)
     return rgb[lab[..., 0].argsort()]
+
+
+def rand_sort(rgb, *args, **kwargs):
+    _rgb = rgb.copy()
+    np.random.shuffle(_rgb)
+    return _rgb
