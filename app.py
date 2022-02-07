@@ -7,16 +7,36 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import skimage
-from skimage import color
+from skimage import color, data
 
-from utils import (sort_by_hue, sort_by_val, sort_by_lum, rand_sort)
+from utils import (sort_by_hue, sort_by_val, sort_by_lum, create_map,
+                   apply_map, to_mozaic, crop_or_pad)
 
 sort_by = {
-    "rand": rand_sort,
     "hue": sort_by_hue,
     "val": sort_by_val,
     "lum": sort_by_lum,
 }
+
+tform = {
+    "hue": (color.rgb2hsv, 0),
+    "val": (color.rgb2hsv, 2),
+    "lum": (color.rgb2lab, 0)
+}
+
+
+@st.cache
+def get_shape(px_size, sort_fun, nl=4096, nc=4096):
+    res0, res1 = nl // px_size, nc // px_size
+    x = np.linspace(-np.pi, np.pi, res0, True)
+    y = np.linspace(-np.pi, np.pi, res1, True)
+    x, y = np.meshgrid(x, y, indexing='ij')
+
+    return {"Vertical ramp": x,
+            "Horizontal ramp": y,
+            "Random": np.random.rand(res0, res1),
+            "Circle": np.cos(x ** 2 + y ** 2),
+            "Cat": crop_or_pad(data.cat(), res0, res1, tform[sort_fun])}
 
 
 @st.cache
@@ -27,24 +47,33 @@ def gen_values():
     _allrgb = skimage.img_as_float(allrgb)
     _allhsv = color.rgb2hsv(_allrgb)
     _alllab = color.rgb2lab(_allrgb)
-    _allrgbcie = color.rgb2rgbcie(_allrgb)
-    _allhsvcie = color.rgb2hsv(_allrgbcie)
-    _alllabcie = color.rgb2lab(_allrgbcie)
-    return allrgb, _allhsv, _alllab, _allhsvcie, _alllabcie
+    return allrgb, _allhsv, _alllab
 
 
 @st.cache
-def get_img(sort_fun, tocie, px_size, nl=4096, nc=4096):
+def gen_cie_values(allrgb):
+    _allrgbcie = color.rgb2rgbcie(skimage.img_as_float(allrgb))
+    _allhsvcie = color.rgb2hsv(_allrgbcie)
+    _alllabcie = color.rgb2lab(_allrgbcie)
+    return _allhsvcie, _alllabcie
 
-    allrgb, _allhsv, _alllab, _allhsvcie, _alllabcie = gen_values()
+
+@st.cache
+def get_img(sort_fun, shape, tocie, px_size, nl=4096, nc=4096):
+
+    allrgb, _allhsv, _alllab = gen_values()
 
     if tocie:
+        _allhsvcie, _alllabcie = gen_cie_values(allrgb)
         sort_val = _alllabcie if sort_fun == "lum" else _allhsvcie
     else:
         sort_val = _alllab if sort_fun == "lum" else _allhsv
 
     allrgb = sort_by[sort_fun](allrgb, sort_val)
-    img = allrgb.reshape(nl, nc, 3)
+
+    src = get_shape(px_size, sort_fun, nl, nc)[shape]
+    _map = create_map(src)
+    img = apply_map(allrgb, _map, px_size)
 
     return img
 
@@ -60,10 +89,17 @@ def get_png(img):
 
 with st.sidebar:
     tocie = st.checkbox("Convert to RGB CIE color space")
-    px_size = st.selectbox("Super pixel size", [16, 8, 4, 2, 1])
+    px_size = st.selectbox("Super pixel size", [32, 16, 8, 4, 2, 1])
     sort_fun = st.selectbox("Sort strategy", sort_by.keys())
+    shape = st.selectbox("Shape", get_shape(px_size, sort_fun).keys())
+    mozaic = st.checkbox("Make mozaic")
 
-img = get_img(sort_fun, tocie, px_size)
+cat = get_shape(px_size, sort_fun)["Cat"]
+
+img = get_img(sort_fun, shape, tocie, px_size)
+
+if mozaic:
+    img = to_mozaic(img, px_size)
 
 fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
