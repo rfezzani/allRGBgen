@@ -1,4 +1,6 @@
+import io
 from itertools import product
+from PIL import Image
 
 import streamlit as st
 import numpy as np
@@ -21,10 +23,11 @@ sort_by = {
 def gen_values():
     vals = np.arange(256, dtype=np.uint8)
 
-    allrgb = skimage.img_as_float(np.array(list(product(vals, vals, vals))))
-    _allhsv = color.rgb2hsv(allrgb)
-    _alllab = color.rgb2lab(allrgb)
-    _allrgbcie = color.rgb2rgbcie(allrgb)
+    allrgb = np.array(list(product(vals, vals, vals)))
+    _allrgb = skimage.img_as_float(allrgb)
+    _allhsv = color.rgb2hsv(_allrgb)
+    _alllab = color.rgb2lab(_allrgb)
+    _allrgbcie = color.rgb2rgbcie(_allrgb)
     _allhsvcie = color.rgb2hsv(_allrgbcie)
     _alllabcie = color.rgb2lab(_allrgbcie)
     return allrgb, _allhsv, _alllab, _allhsvcie, _alllabcie
@@ -42,7 +45,17 @@ def get_img(sort_fun, tocie, px_size, nl=4096, nc=4096):
 
     allrgb = sort_by[sort_fun](allrgb, sort_val)
     img = allrgb.reshape(nl, nc, 3)
+
     return img
+
+
+@st.cache(allow_output_mutation=True)
+def get_png(img):
+    image = Image.fromarray(img)
+    out = io.BytesIO()
+    image.save(out, format="PNG")
+
+    return out
 
 
 with st.sidebar:
@@ -60,3 +73,7 @@ ax.set_axis_off()
 fig.tight_layout()
 
 st.pyplot(fig)
+
+with st.sidebar:
+    img_dl = st.download_button("Load generated image", get_png(img),
+                                file_name="allrgb.png", mime="image/png")
