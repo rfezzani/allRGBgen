@@ -19,7 +19,6 @@ sort_by = {
 
 @st.cache
 def gen_values():
-    print(1)
     vals = np.arange(256, dtype=np.uint8)
 
     allrgb = skimage.img_as_float(np.array(list(product(vals, vals, vals))))
@@ -33,7 +32,6 @@ def gen_values():
 
 allrgb, _allhsv, _alllab, _allhsvcie, _alllabcie = gen_values()
 
-print(2)
 with st.sidebar:
     tocie = st.checkbox("Convert to RGB CIE color space")
     px_size = st.selectbox("Super pixel size", [16, 8, 4, 2, 1])
@@ -46,7 +44,6 @@ if render:
     else:
         sort_val = _alllab if sort_fun == "lum" else _allhsv
 
-    print(3)
     nl, nc = 4096, 4096  # Output shape
     res0, res1 = nl // px_size, nc // px_size  # Map shape
 
