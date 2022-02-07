@@ -88,7 +88,7 @@ def get_png(img):
 
 with st.sidebar:
     tocie = st.checkbox("Convert to RGB CIE color space")
-    px_size = st.selectbox("Super pixel size", [32, 16, 8, 4, 2, 1])
+    px_size = st.selectbox("Super pixel size", [32, 16, 8, 4, 2, 1], index=1)
     sort_fun = st.selectbox("Sort strategy", sort_by.keys())
     shape = st.selectbox("Shape", get_shape(px_size, sort_fun).keys())
     mozaic = st.checkbox("Make mozaic")
