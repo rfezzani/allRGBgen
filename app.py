@@ -30,32 +30,33 @@ def gen_values():
     return allrgb, _allhsv, _alllab, _allhsvcie, _alllabcie
 
 
-allrgb, _allhsv, _alllab, _allhsvcie, _alllabcie = gen_values()
+@st.cache
+def get_img(sort_fun, tocie, px_size, nl=4096, nc=4096):
 
-with st.sidebar:
-    tocie = st.checkbox("Convert to RGB CIE color space")
-    px_size = st.selectbox("Super pixel size", [16, 8, 4, 2, 1])
-    sort_fun = st.selectbox("Sort strategy", sort_by.keys())
-    render = st.button("Render")
+    allrgb, _allhsv, _alllab, _allhsvcie, _alllabcie = gen_values()
 
-if render:
     if tocie:
         sort_val = _alllabcie if sort_fun == "lum" else _allhsvcie
     else:
         sort_val = _alllab if sort_fun == "lum" else _allhsv
 
-    nl, nc = 4096, 4096  # Output shape
-    res0, res1 = nl // px_size, nc // px_size  # Map shape
-
     allrgb = sort_by[sort_fun](allrgb, sort_val)
+    img = allrgb.reshape(nl, nc, 3)
+    return img
 
-    img = allrgb.reshape(4096, 4096, 3)
 
-    fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+with st.sidebar:
+    tocie = st.checkbox("Convert to RGB CIE color space")
+    px_size = st.selectbox("Super pixel size", [16, 8, 4, 2, 1])
+    sort_fun = st.selectbox("Sort strategy", sort_by.keys())
 
-    ax.imshow(img)
-    ax.set_axis_off()
+img = get_img(sort_fun, tocie, px_size)
 
-    fig.tight_layout()
+fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
-    st.pyplot(fig)
+ax.imshow(img)
+ax.set_axis_off()
+
+fig.tight_layout()
+
+st.pyplot(fig)
