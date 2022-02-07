@@ -4,7 +4,6 @@ from PIL import Image
 
 import streamlit as st
 import numpy as np
-from matplotlib import pyplot as plt
 
 import skimage
 from skimage import color, data
@@ -101,14 +100,7 @@ img = get_img(sort_fun, shape, tocie, px_size)
 if mozaic:
     img = to_mozaic(img, px_size)
 
-fig, ax = plt.subplots(1, 1, figsize=(6, 6))
-
-ax.imshow(img)
-ax.set_axis_off()
-
-fig.tight_layout()
-
-st.pyplot(fig)
+st.image(img)
 
 with st.sidebar:
     img_dl = st.download_button("Load generated image", get_png(img),
