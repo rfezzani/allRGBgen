@@ -27,7 +27,7 @@ tform = {
 
 
 @st.cache
-def get_shape(px_size, sort_fun, ref_col, nl=4096, nc=4096):
+def get_shape(px_size, sort_fun, ref_col, usr_img, nl=4096, nc=4096):
     res0, res1 = nl // px_size, nc // px_size
     x = np.linspace(-np.pi, np.pi, res0, True)
     y = np.linspace(-np.pi, np.pi, res1, True)
@@ -36,14 +36,21 @@ def get_shape(px_size, sort_fun, ref_col, nl=4096, nc=4096):
     if ref_col is not None:
         tform["Distance to ref color"] = (dist_to_ref_color(ref_col), None)
 
-    return {"Vertical ramp": x,
-            "Horizontal ramp": y,
-            "Random": np.random.rand(res0, res1),
-            "Circle": np.cos(x ** 2 + y ** 2),
-            "Cat": crop_or_pad(data.cat(), res0, res1, tform[sort_fun]),
-            "Coffee": crop_or_pad(data.coffee(), res0, res1, tform[sort_fun]),
-            "Astronaut": crop_or_pad(data.astronaut(),
-                                     res0, res1, tform[sort_fun])}
+    shapes = {"Vertical ramp": x,
+              "Horizontal ramp": y,
+              "Random": np.random.rand(res0, res1),
+              "Circle": np.cos(x ** 2 + y ** 2),
+              "Cat": crop_or_pad(data.cat(), res0, res1, tform[sort_fun]),
+              "Coffee": crop_or_pad(data.coffee(), res0, res1,
+                                    tform[sort_fun]),
+              "Astronaut": crop_or_pad(data.astronaut(),
+                                       res0, res1, tform[sort_fun])}
+
+    if usr_img is not None:
+        img = np.array(Image.open(usr_img))
+        shapes["Your image"] = crop_or_pad(img, res0, res1, tform[sort_fun])
+
+    return shapes
 
 
 @st.cache
@@ -57,7 +64,7 @@ def gen_values():
 
 
 @st.cache
-def get_img(sort_fun, shape, px_size, ref_col, nl=4096, nc=4096):
+def get_img(sort_fun, shape, px_size, ref_col, usr_img, nl=4096, nc=4096):
 
     allrgb, _allhsv, _alllab = gen_values()
     if ref_col is None:
@@ -67,7 +74,7 @@ def get_img(sort_fun, shape, px_size, ref_col, nl=4096, nc=4096):
         dist_to_ref = dist_to_ref_color(ref_col)
         allrgb = allrgb[np.argsort(dist_to_ref(_alllab, True))]
 
-    src = get_shape(px_size, sort_fun, ref_col, nl, nc)[shape]
+    src = get_shape(px_size, sort_fun, ref_col, usr_img, nl, nc)[shape]
     _map = create_map(src)
     img = apply_map(allrgb, _map, px_size)
 
@@ -94,6 +101,7 @@ def dist_to_ref_color(col):
 st.set_page_config(layout="wide")
 
 with st.sidebar:
+    usr_img = st.file_uploader("Your image", type=["jpg", "png"])
     px_size = st.selectbox("Super pixel size", [32, 16, 8, 4, 2, 1], index=1)
     sort_fun = st.selectbox("Sort strategy", sort_by.keys())
     container = st.empty()
@@ -101,10 +109,11 @@ with st.sidebar:
         ref_col = container.color_picker("Reference color")
     else:
         ref_col = None
-    shape = st.selectbox("Shape", get_shape(px_size, sort_fun, ref_col).keys())
+    shape = st.selectbox("Super pixel map",
+                         get_shape(px_size, sort_fun, ref_col, usr_img).keys())
     mozaic = st.checkbox("Make mozaic")
 
-    img = get_img(sort_fun, shape, px_size, ref_col)
+    img = get_img(sort_fun, shape, px_size, ref_col, usr_img)
 
     if mozaic:
         img = to_mozaic(img, px_size)
