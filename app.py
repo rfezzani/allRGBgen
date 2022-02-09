@@ -41,6 +41,7 @@ def get_shape(px_size, sort_fun, ref_col, nl=4096, nc=4096):
             "Random": np.random.rand(res0, res1),
             "Circle": np.cos(x ** 2 + y ** 2),
             "Cat": crop_or_pad(data.cat(), res0, res1, tform[sort_fun]),
+            "Coffee": crop_or_pad(data.coffee(), res0, res1, tform[sort_fun]),
             "Astronaut": crop_or_pad(data.astronaut(),
                                      res0, res1, tform[sort_fun])}
 

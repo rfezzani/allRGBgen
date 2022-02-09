@@ -66,11 +66,26 @@ def crop_or_pad(img, res0, res1, tform_args):
         raise ValueError("Input image must be RGB")
     nl, nc, _ = img.shape
 
+    _img = transform(img, *tform_args)
+
+    out = np.zeros((res0, res1))
+
     i0 = abs(res0 - nl) // 2
     j0 = abs(res1 - nc) // 2
-    if nl < res0 or nc < res1:
-        out = np.zeros((res0, res1))
-        out[i0: i0 + nl, j0: j0+nc] = transform(img, *tform_args)
+
+    s0 = slice(None)
+    s1 = slice(None)
+    s2 = slice(None)
+    s3 = slice(None)
+    if nl < res0:
+        s0 = slice(i0, i0 + nl)
     else:
-        out = transform(img[i0: i0 + res0, j0: j0 + res1, :], *tform_args)
+        s2 = slice(i0, i0 + res0)
+    if nc < res1:
+        s1 = slice(j0, j0 + nc)
+    else:
+        s3 = slice(j0, j0 + res1)
+
+    out[s0, s1] = _img[s2, s3]
+
     return exposure.rescale_intensity(out)
