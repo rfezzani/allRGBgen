@@ -12,16 +12,16 @@ from utils import (sort_by_hue, sort_by_val, sort_by_lum, create_map,
                    apply_map, to_mozaic, crop_or_pad)
 
 sort_by = {
+    "luminance": sort_by_lum,
     "hue": sort_by_hue,
     "val": sort_by_val,
-    "lum": sort_by_lum,
     "Distance to ref color": None
 }
 
 tform = {
+    "luminance": (color.rgb2lab, 0),
     "hue": (color.rgb2hsv, 0),
     "val": (color.rgb2hsv, 2),
-    "lum": (color.rgb2lab, 0),
     "Distance to ref color": None
 }
 
@@ -61,7 +61,7 @@ def get_img(sort_fun, shape, px_size, ref_col, nl=4096, nc=4096):
 
     allrgb, _allhsv, _alllab = gen_values()
     if ref_col is None:
-        sort_val = _alllab if sort_fun == "lum" else _allhsv
+        sort_val = _alllab if sort_fun == "luminance" else _allhsv
         allrgb = sort_by[sort_fun](allrgb, sort_val)
     else:
         dist_to_ref = dist_to_ref_color(ref_col)
@@ -91,6 +91,8 @@ def dist_to_ref_color(col):
     return dist_to_ref
 
 
+st.set_page_config(layout="wide")
+
 with st.sidebar:
     px_size = st.selectbox("Super pixel size", [32, 16, 8, 4, 2, 1], index=1)
     sort_fun = st.selectbox("Sort strategy", sort_by.keys())
@@ -110,4 +112,7 @@ with st.sidebar:
     img_dl = st.download_button("Load generated image", get_png(img),
                                 file_name="allrgb.png", mime="image/png")
 
-st.image(img)
+col0, col1 = st.columns(2)
+with open("README.md") as f:
+    col1.write(f.read())
+col0.image(img)
