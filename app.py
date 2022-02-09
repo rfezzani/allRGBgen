@@ -105,14 +105,14 @@ st.set_page_config(layout="wide")
 
 with st.sidebar:
     usr_img = st.file_uploader("Your image", type=["jpg", "png", "jpeg"])
-    px_size = st.selectbox("Super pixel size", [32, 16, 8, 4, 2, 1], index=1)
+    px_size = st.selectbox("Super-pixel size", [32, 16, 8], index=1)
     sort_fun = st.selectbox("Sort strategy", sort_by.keys())
     container = st.empty()
     if sort_fun == "Distance to ref color":
         ref_col = container.color_picker("Reference color")
     else:
         ref_col = None
-    shape = st.selectbox("Super pixel map",
+    shape = st.selectbox("Super-pixel map",
                          get_shape(px_size, sort_fun, ref_col, usr_img).keys())
     mozaic = st.checkbox("Make mozaic")
 
