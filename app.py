@@ -26,7 +26,7 @@ tform = {
 }
 
 
-@st.cache
+@st.cache(max_entries=10)
 def get_shape(px_size, sort_fun, ref_col, usr_img, nl=4096, nc=4096):
     res0, res1 = nl // px_size, nc // px_size
     x = np.linspace(-np.pi, np.pi, res0, True)
@@ -56,7 +56,7 @@ def get_shape(px_size, sort_fun, ref_col, usr_img, nl=4096, nc=4096):
     return shapes
 
 
-@st.cache
+@st.cache(max_entries=10)
 def gen_values():
     vals = np.arange(256, dtype=np.uint8)
     allrgb = np.array(list(product(vals, vals, vals)))
@@ -66,7 +66,7 @@ def gen_values():
     return allrgb, _allhsvcie, _alllabcie
 
 
-@st.cache
+@st.cache(max_entries=10)
 def get_img(sort_fun, shape, px_size, ref_col, usr_img, nl=4096, nc=4096):
 
     allrgb, _allhsv, _alllab = gen_values()
@@ -84,7 +84,7 @@ def get_img(sort_fun, shape, px_size, ref_col, usr_img, nl=4096, nc=4096):
     return img
 
 
-@st.cache(allow_output_mutation=True)
+@st.cache(allow_output_mutation=True, max_entries=10)
 def get_png(img):
     image = Image.fromarray(img)
     out = io.BytesIO()
@@ -92,7 +92,7 @@ def get_png(img):
     return out
 
 
-@st.cache
+@st.cache(max_entries=10)
 def dist_to_ref_color(col):
     def dist_to_ref(img, islab=False):
         ref_color = color.rgb2lab(np.array(ImageColor.getrgb(col)) / 255)
