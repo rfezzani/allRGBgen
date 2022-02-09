@@ -28,10 +28,6 @@ def sort_by_lum(rgb, lab=None):
     return rgb[lab[..., 0].argsort()]
 
 
-def sort_by_dist_to_ref(rgb, ref):
-    pass
-
-
 def create_map(src):
     _, inv, count = np.unique(src,
                               return_inverse=True,

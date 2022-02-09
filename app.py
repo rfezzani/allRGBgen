@@ -1,5 +1,4 @@
 import io
-from functools import partial
 from itertools import product
 from PIL import Image, ImageColor
 
@@ -9,9 +8,8 @@ import numpy as np
 import skimage
 from skimage import color, data
 
-from utils import (sort_by_hue, sort_by_val, sort_by_lum,
-                   sort_by_dist_to_ref, create_map, apply_map,
-                   to_mozaic, crop_or_pad)
+from utils import (sort_by_hue, sort_by_val, sort_by_lum, create_map,
+                   apply_map, to_mozaic, crop_or_pad)
 
 sort_by = {
     "hue": sort_by_hue,
@@ -29,7 +27,7 @@ tform = {
 
 
 @st.cache
-def get_shape(px_size, sort_fun, ref_col=None, nl=4096, nc=4096):
+def get_shape(px_size, sort_fun, ref_col, nl=4096, nc=4096):
     res0, res1 = nl // px_size, nc // px_size
     x = np.linspace(-np.pi, np.pi, res0, True)
     y = np.linspace(-np.pi, np.pi, res1, True)
@@ -42,7 +40,9 @@ def get_shape(px_size, sort_fun, ref_col=None, nl=4096, nc=4096):
             "Horizontal ramp": y,
             "Random": np.random.rand(res0, res1),
             "Circle": np.cos(x ** 2 + y ** 2),
-            "Cat": crop_or_pad(data.cat(), res0, res1, tform[sort_fun])}
+            "Cat": crop_or_pad(data.cat(), res0, res1, tform[sort_fun]),
+            "Astronaut": crop_or_pad(data.astronaut(),
+                                     res0, res1, tform[sort_fun])}
 
 
 @st.cache
@@ -84,8 +84,6 @@ def get_png(img):
 @st.cache
 def dist_to_ref_color(col):
     def dist_to_ref(img, islab=False):
-        print(32*"=", col, ImageColor.getrgb(col),
-              color.rgb2lab(np.array(ImageColor.getrgb(col)) / 255))
         ref_color = color.rgb2lab(np.array(ImageColor.getrgb(col)) / 255)
         lab = color.rgb2lab(img) if not islab else img
         return color.deltaE_cie76(ref_color, lab)
