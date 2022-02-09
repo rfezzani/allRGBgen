@@ -62,11 +62,16 @@ def to_mozaic(img, px_size):
 
 
 def crop_or_pad(img, res0, res1, tform_args):
-    if img.ndim != 3:
-        raise ValueError("Input image must be RGB")
-    nl, nc, _ = img.shape
+    _img = img
+    if img.ndim == 3:
+        if img.shape[2] == 3:
+            _img = transform(img, *tform_args)
+        elif img.shape[2] == 4:
+            _img = transform(color.rgba2rgb(img), *tform_args)
+        else:
+            raise ValueError("Input image must be gray scale, RGB or RGBA")
 
-    _img = transform(img, *tform_args)
+    nl, nc = _img.shape
 
     out = np.zeros((res0, res1))
 

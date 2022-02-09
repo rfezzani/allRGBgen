@@ -38,11 +38,14 @@ def get_shape(px_size, sort_fun, ref_col, usr_img, nl=4096, nc=4096):
 
     shapes = {"Vertical ramp": x,
               "Horizontal ramp": y,
-              "Random": np.random.rand(res0, res1),
               "Circle": np.cos(x ** 2 + y ** 2),
               "Cat": crop_or_pad(data.cat(), res0, res1, tform[sort_fun]),
+              "Camera": crop_or_pad(data.camera(), res0, res1,
+                                    tform[sort_fun]),
               "Coffee": crop_or_pad(data.coffee(), res0, res1,
                                     tform[sort_fun]),
+              "Clock": crop_or_pad(data.clock(), res0, res1, tform[sort_fun]),
+              "Moon": crop_or_pad(data.moon(), res0, res1, tform[sort_fun]),
               "Astronaut": crop_or_pad(data.astronaut(),
                                        res0, res1, tform[sort_fun])}
 
@@ -101,7 +104,7 @@ def dist_to_ref_color(col):
 st.set_page_config(layout="wide")
 
 with st.sidebar:
-    usr_img = st.file_uploader("Your image", type=["jpg", "png"])
+    usr_img = st.file_uploader("Your image", type=["jpg", "png", "jpeg"])
     px_size = st.selectbox("Super pixel size", [32, 16, 8, 4, 2, 1], index=1)
     sort_fun = st.selectbox("Sort strategy", sort_by.keys())
     container = st.empty()
